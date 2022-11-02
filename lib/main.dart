@@ -149,12 +149,14 @@ Future<String> createImage(String prompt) async {
 
   print("Starting request");
 
-  map['enable_hr'] = "false";
-  map['denoising_strength'] = "0";
-  map['prompt'] = 'masterpiece, best quality, masterpiece, $prompt';
+
+  //map['firstphase_width'] = '0';
+  //map['firstphase_height'] = '0';
+  map['prompt'] = 'masterpiece, best quality, $prompt';
   map['seed'] = "-1";
   map['subseed'] = "-1";
   map['batch_size'] = "1";
+  //map['n_iter'] = "1";
   map['steps'] = "20";
   map['cfg_scale'] = "20";
   map['width'] = "512";
@@ -175,7 +177,9 @@ Future<String> createImage(String prompt) async {
   progressValue.value = 0;
   doProgress();
   http.Response response = await http
-      .post(url, body: body, headers: {"Content-Type": "application/json"});
+      .post(url, body: body, headers: {"Content-Type": "application/json", "Accept": "application/json"});
+
+  print("Response ${utf8.decode(response.bodyBytes)}");
 
   var images = jsonDecode(utf8.decode(response.bodyBytes))['images'];
 
@@ -201,20 +205,16 @@ Future<Map<String, double>> getProgress() async {
 
 Future<void> doProgress() async {
   while (true) {
-    await Future.delayed(
-      const Duration(milliseconds: 500),
-      () {
-        if (!inProgress) {
-          progressValue.value = 1;
-          return;
-        }
-        getProgress().then(
+    if (!inProgress) {
+      progressValue.value = 1;
+      return;
+    }
+    getProgress().then(
           (value) => {
-            progressValue.value = value['progress']!,
-            print("Setting ${(value['progress']! / value['eta_relative']!)} from ${value['progress']} / ${value['eta_relative']}")
-          },
-        );
+        progressValue.value = value['progress']!,
+        print("Setting ${(value['progress']! / value['eta_relative']!)} from ${value['progress']} / ${value['eta_relative']}")
       },
     );
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 }

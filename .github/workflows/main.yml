@@ -19,7 +19,7 @@ jobs:
       run: |
         # create variables
         CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-        PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+        PP_PATH=$RUNNER_TEMP/StableDiffusionDistribution.mobileprovision
         KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
         # import certificate and provisioning profile from secrets
@@ -44,7 +44,7 @@ jobs:
         flutter-version: '3.3.6'
         channel: 'stable'
     - run: flutter pub get
-    - run: flutter build ipa --release --export-options-plist=ios/Runner/ExportOptions.plist
+    - run: flutter build ipa
     - run: flutter build apk
       
     # Upload generated apk to the artifacts.
@@ -61,4 +61,4 @@ jobs:
       if: ${{ always() }}
       run: |
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
-        rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
+        rm ~/Library/MobileDevice/Provisioning\ Profiles/StableDiffusionDistribution.mobileprovision

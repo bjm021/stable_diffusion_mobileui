@@ -45,7 +45,7 @@ jobs:
         channel: 'stable'
     - run: flutter pub get
     - run: flutter build apk
-    - run: flutter build ipa
+    - run: flutter build ipa --release --export-options-plist=ios/Runner/ExportOptions.plist
       
     # Upload generated apk to the artifacts.
     - uses: actions/upload-artifact@v1
@@ -56,3 +56,9 @@ jobs:
       with:
         name: development-ipa
         path: build/ios/ipa/stable_diffusion_mobileui.ipa
+        
+    - name: Clean up keychain and provisioning profile
+      if: ${{ always() }}
+      run: |
+        security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+        rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision

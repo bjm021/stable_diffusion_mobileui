@@ -1,8 +1,16 @@
 import 'dart:ffi';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'settings.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:path_provider/path_provider.dart';
+
+bool hasDataLoaded = false;
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +28,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      routes: {
+        '/settings': (context) => SettingsPage(),
+      },
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.blueGrey.shade800,
@@ -42,15 +53,32 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+var promptController = TextEditingController();
+
+Future<void> loadLastPrompt() async {
+  var prefs = await SharedPreferences.getInstance();
+  if (prefs.containsKey('last-prompt')) {
+    promptController.text = prefs.getString('last-prompt')!;
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   String imageDataBase64 = 'NONE';
-  var promptController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    loadLastPrompt();
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.pushNamed(context, "/settings");
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -102,25 +130,77 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
             ),
+            // save imeage button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (imageDataBase64 == 'NONE') {
+                    return;
+                  }
+                  _createFileFromString(imageDataBase64).then(
+                    (value) => {
+                      print("Saved to $value"),
+                      GallerySaver.saveImage(value).then(
+                        (success) => {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Image saved'),
+                            ),
+                          ),
+                          _deleteFile(value),
+                        },
+                      )
+                    },
+                  );
+                },
+                child: const Text('Save image'),
+              ),
+            ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          createImage(promptController.text).then((value) => {
-                setState(() {
-                  var image = value;
-                  if (value.contains(",")) {
-                    image = value.split(",")[1];
-                  }
-                  imageDataBase64 = image;
-                })
-              });
+          createImage(context, promptController.text).then(
+            (value) => {
+              setState(() {
+                var image = value;
+                if (image == "ERROR") {
+                  return;
+                }
+                if (value.contains(",")) {
+                  image = value.split(",")[1];
+                }
+                imageDataBase64 = image;
+              })
+            },
+          );
         },
         tooltip: 'Increment',
-        child: const Icon(Icons.start),
+        child: const Icon(Icons.terminal),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+Future<String> _createFileFromString(String encodedStr) async {
+  Uint8List bytes = base64.decode(encodedStr);
+  String dir = (await getApplicationDocumentsDirectory()).path;
+  File file =
+      File("$dir/" + DateTime.now().millisecondsSinceEpoch.toString() + ".png");
+  await file.writeAsBytes(bytes);
+  return file.path;
+}
+
+// function to delete the created image file
+Future<void> _deleteFile(String path) async {
+  try {
+    await File(path).delete();
+    print("Deleted tmp image");
+  } catch (e) {
+    print("Failed to delete tmp image");
+    print(e);
   }
 }
 
@@ -144,40 +224,55 @@ class _ProgressBarIndicatorState extends State<ProgressBarIndicator>
   }
 }
 
-Future<String> createImage(String prompt) async {
+Future<String> createImage(BuildContext context, String prompt) async {
   var map = <String, String>{};
 
   print("Starting request");
 
+  final prefs = await SharedPreferences.getInstance();
+  prefs.setString("last-prompt", prompt);
+  if (!prefs.containsKey("has-data")) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text("Setup Error"),
+          content: Text("You have not set up the app yet!"),
+        );
+      },
+    );
+    return "ERROR";
+  }
 
   //map['firstphase_width'] = '0';
   //map['firstphase_height'] = '0';
-  map['prompt'] = 'masterpiece, best quality, $prompt';
+  map['prompt'] = '${prefs.getString("defaultPrompt")}, $prompt';
   map['seed'] = "-1";
   map['subseed'] = "-1";
   map['batch_size'] = "1";
   //map['n_iter'] = "1";
-  map['steps'] = "20";
-  map['cfg_scale'] = "20";
+  map['steps'] = "${prefs.getInt("steps")}";
+  map['cfg_scale'] = "${prefs.getInt("cfg")}";
   map['width'] = "512";
   map['height'] = "512";
-  map['negative_prompt'] =
-      "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name";
+  map['negative_prompt'] = prefs.getString("defaultNegativePrompt")!;
   map['sampler_index'] = "Euler";
 
   var body = json.encode(map);
 
   var url = Uri(
       scheme: "http",
-      host: "192.168.7.148",
-      port: 7860,
+      host: prefs.getString("host")!.split(":")[0],
+      port: int.parse(prefs.getString("host")!.split(":")[1]),
       path: "/sdapi/v1/txt2img");
 
   inProgress = true;
   progressValue.value = 0;
   doProgress();
-  http.Response response = await http
-      .post(url, body: body, headers: {"Content-Type": "application/json", "Accept": "application/json"});
+  http.Response response = await http.post(url, body: body, headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  });
 
   print("Response ${utf8.decode(response.bodyBytes)}");
 
@@ -210,9 +305,10 @@ Future<void> doProgress() async {
       return;
     }
     getProgress().then(
-          (value) => {
+      (value) => {
         progressValue.value = value['progress']!,
-        print("Setting ${(value['progress']! / value['eta_relative']!)} from ${value['progress']} / ${value['eta_relative']}")
+        print(
+            "Setting ${(value['progress']! / value['eta_relative']!)} from ${value['progress']} / ${value['eta_relative']}")
       },
     );
     await Future.delayed(const Duration(milliseconds: 500));

@@ -44,7 +44,7 @@ jobs:
         flutter-version: '3.3.6'
         channel: 'stable'
     - run: flutter pub get
-    - run: flutter build ipa
+    - run: flutter build ipa --release --export-options-plist=ios/Runner/ExportOptions.plist
     - run: flutter build apk
       
     # Upload generated apk to the artifacts.

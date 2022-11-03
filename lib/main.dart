@@ -110,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     return const Padding(
                       padding: EdgeInsets.fromLTRB(10, 200, 10, 200),
                       child: Text(
-                        'Waiting for 1st image',
+                        'Waiting for image',
                         style: TextStyle(color: Colors.white),
                       ),
                     );
@@ -122,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
               valueListenable: progressValue,
               builder: (context, value, child) {
                 return Padding(
-                  padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                   child: LinearProgressIndicator(
                     value: value,
                     semanticsLabel: "kkd",
@@ -130,7 +130,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
             ),
-            // save imeage button
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
               child: ElevatedButton(
@@ -140,7 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   _createFileFromString(imageDataBase64).then(
                     (value) => {
-                      print("Saved to $value"),
                       GallerySaver.saveImage(value).then(
                         (success) => {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -188,7 +186,7 @@ Future<String> _createFileFromString(String encodedStr) async {
   Uint8List bytes = base64.decode(encodedStr);
   String dir = (await getApplicationDocumentsDirectory()).path;
   File file =
-      File("$dir/" + DateTime.now().millisecondsSinceEpoch.toString() + ".png");
+      File("$dir/${DateTime.now().millisecondsSinceEpoch}.png");
   await file.writeAsBytes(bytes);
   return file.path;
 }
@@ -197,10 +195,8 @@ Future<String> _createFileFromString(String encodedStr) async {
 Future<void> _deleteFile(String path) async {
   try {
     await File(path).delete();
-    print("Deleted tmp image");
   } catch (e) {
     print("Failed to delete tmp image");
-    print(e);
   }
 }
 
@@ -227,8 +223,6 @@ class _ProgressBarIndicatorState extends State<ProgressBarIndicator>
 Future<String> createImage(BuildContext context, String prompt) async {
   var map = <String, String>{};
 
-  print("Starting request");
-
   final prefs = await SharedPreferences.getInstance();
   prefs.setString("last-prompt", prompt);
   if (!prefs.containsKey("has-data")) {
@@ -244,19 +238,16 @@ Future<String> createImage(BuildContext context, String prompt) async {
     return "ERROR";
   }
 
-  //map['firstphase_width'] = '0';
-  //map['firstphase_height'] = '0';
   map['prompt'] = '${prefs.getString("defaultPrompt")}, $prompt';
   map['seed'] = "-1";
   map['subseed'] = "-1";
   map['batch_size'] = "1";
-  //map['n_iter'] = "1";
   map['steps'] = "${prefs.getInt("steps")}";
   map['cfg_scale'] = "${prefs.getInt("cfg")}";
   map['width'] = "512";
   map['height'] = "512";
   map['negative_prompt'] = prefs.getString("defaultNegativePrompt")!;
-  map['sampler_index'] = "Euler";
+  map['sampler_index'] = prefs.getString("sampler")!;
 
   var body = json.encode(map);
 
@@ -274,8 +265,6 @@ Future<String> createImage(BuildContext context, String prompt) async {
     "Accept": "application/json"
   });
 
-  print("Response ${utf8.decode(response.bodyBytes)}");
-
   var images = jsonDecode(utf8.decode(response.bodyBytes))['images'];
 
   inProgress = false;
@@ -284,11 +273,13 @@ Future<String> createImage(BuildContext context, String prompt) async {
 }
 
 Future<Map<String, double>> getProgress() async {
+  final prefs = await SharedPreferences.getInstance();
   var url = Uri(
       scheme: "http",
-      host: "192.168.7.148",
-      port: 7860,
+      host: prefs.getString("host")!.split(":")[0],
+      port: int.parse(prefs.getString("host")!.split(":")[1]),
       path: "/sdapi/v1/progress");
+
   http.Response response = await http.get(url);
 
   var jsonResp = jsonDecode(utf8.decode(response.bodyBytes));
@@ -307,8 +298,6 @@ Future<void> doProgress() async {
     getProgress().then(
       (value) => {
         progressValue.value = value['progress']!,
-        print(
-            "Setting ${(value['progress']! / value['eta_relative']!)} from ${value['progress']} / ${value['eta_relative']}")
       },
     );
     await Future.delayed(const Duration(milliseconds: 500));

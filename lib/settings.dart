@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 bool hasDataLoaded = false;
@@ -19,7 +17,7 @@ class SettingsPage extends StatefulWidget {
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 
-  var hostController = TextEditingController();
+  final hostController = TextEditingController();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
@@ -121,135 +119,135 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                     ),
-                    ValueListenableBuilder(
-                      valueListenable: sampler,
-                      builder: (context, value, child) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                          child: DropdownButton(
-                            onChanged: (String? newValue) {
-                              sampler.value = newValue!;
-                            },
-                            items: const [
-                              DropdownMenuItem(
-                                value: "Euler a",
-                                child: Text("Euler a"),
-                              ),
-                              DropdownMenuItem(
-                                value: "Euler",
-                                child: Text("Euler"),
-                              ),
-                              DropdownMenuItem(
-                                value: "LMS",
-                                child: Text("LMS"),
-                              ),
-                              DropdownMenuItem(
-                                value: "Heun",
-                                child: Text("Heun"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DPM2",
-                                child: Text("DPM2"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DPM2 a",
-                                child: Text("DPM2 a"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DPM fast",
-                                child: Text("DPM fast"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DPM adaptive",
-                                child: Text("DPM adaptive"),
-                              ),
-                              DropdownMenuItem(
-                                value: "LMS Karras",
-                                child: Text("LMS Karras"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DPM2 Karras",
-                                child: Text("DPM2 Karras"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DPM2 a Karras",
-                                child: Text("DPM2 a Karras"),
-                              ),
-                              DropdownMenuItem(
-                                value: "DDIM",
-                                child: Text("DDIM"),
-                              ),
-                              DropdownMenuItem(
-                                value: "PLMS",
-                                child: Text("PLMS"),
-                              ),
-                            ],
-                            hint: const Text("Select item"),
-                            style: const TextStyle(color: Colors.white),
-                            dropdownColor: Colors.blueGrey.shade900,
-                            isExpanded: true,
-                            value: sampler.value,
-                          ),
-                        );
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                      child: TextFormField(
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blue),
-                          ),
-                          labelStyle: TextStyle(color: Colors.white),
-                          labelText: 'Text added to every prompt',
-                        ),
-                        controller: defaultPrompt,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                      child: TextFormField(
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blue),
-                          ),
-                          labelStyle: TextStyle(color: Colors.white),
-                          labelText: 'Negative prompt',
-                        ),
-                        controller: defaultNegativePrompt,
-                      ),
-                    ),
-                    // save button
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                      child: ElevatedButton(
-                        // full width button
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(
-                              40), // fromHeight use double.infinity as width and 40 is the height
-                        ),
-                        onPressed: () {
-                          saveConfig(context).then(
-                            (value) => Navigator.pushNamedAndRemoveUntil(context, "/", (route) => false)
-                          );
-                        },
-                        child: const Text("Save"),
-                      ),
-                    ),
                   ],
                 );
               },
-            )
+            ),
+            ValueListenableBuilder(
+              valueListenable: sampler,
+              builder: (context, value, child) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: DropdownButton(
+                    onChanged: (String? newValue) {
+                      sampler.value = newValue!;
+                    },
+                    items: const [
+                      DropdownMenuItem(
+                        value: "Euler a",
+                        child: Text("Euler a"),
+                      ),
+                      DropdownMenuItem(
+                        value: "Euler",
+                        child: Text("Euler"),
+                      ),
+                      DropdownMenuItem(
+                        value: "LMS",
+                        child: Text("LMS"),
+                      ),
+                      DropdownMenuItem(
+                        value: "Heun",
+                        child: Text("Heun"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM2",
+                        child: Text("DPM2"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM2 a",
+                        child: Text("DPM2 a"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM fast",
+                        child: Text("DPM fast"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM adaptive",
+                        child: Text("DPM adaptive"),
+                      ),
+                      DropdownMenuItem(
+                        value: "LMS Karras",
+                        child: Text("LMS Karras"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM2 Karras",
+                        child: Text("DPM2 Karras"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM2 a Karras",
+                        child: Text("DPM2 a Karras"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DDIM",
+                        child: Text("DDIM"),
+                      ),
+                      DropdownMenuItem(
+                        value: "PLMS",
+                        child: Text("PLMS"),
+                      ),
+                    ],
+                    hint: const Text("Select item"),
+                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: Colors.blueGrey.shade900,
+                    isExpanded: true,
+                    value: sampler.value,
+                  ),
+                );
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: TextFormField(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  labelStyle: TextStyle(color: Colors.white),
+                  labelText: 'Text added to every prompt',
+                ),
+                controller: defaultPrompt,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: TextFormField(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  labelStyle: TextStyle(color: Colors.white),
+                  labelText: 'Negative prompt',
+                ),
+                controller: defaultNegativePrompt,
+              ),
+            ),
+            // save button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: ElevatedButton(
+                // full width button
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(
+                      40), // fromHeight use double.infinity as width and 40 is the height
+                ),
+                onPressed: () {
+                  saveConfig(context).then((value) =>
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, "/", (route) => false));
+                },
+                child: const Text("Save"),
+              ),
+            ),
           ],
         ),
       ),

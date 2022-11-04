@@ -1,7 +1,7 @@
 # stable_diffusion_mobileui
 
 A mobile client for [stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-
+![app screenshot](https://cdn.bjmsw.net/img/sd_mui.jpg)
 ## Getting Started
 
 1. Install the stable-diffusion-webui

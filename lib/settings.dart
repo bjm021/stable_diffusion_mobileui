@@ -8,10 +8,8 @@ var host = TextEditingController();
 var steps = ValueNotifier<int>(20);
 var cfg = ValueNotifier<int>(20);
 var sampler = ValueNotifier("Euler");
-var defaultPrompt = TextEditingController(text: "masterpiece, best quality");
-var defaultNegativePrompt = TextEditingController(
-    text:
-        "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name");
+var defaultPrompt = TextEditingController(text: "");
+var defaultNegativePrompt = TextEditingController(text: "");
 
 class SettingsPage extends StatefulWidget {
   SettingsPage({Key? key}) : super(key: key);
@@ -272,19 +270,16 @@ Future<void> saveConfig(BuildContext context) async {
 }
 
 Future<void> loadSavedData() async {
-  print("LOADING DATA");
   final prefs = await SharedPreferences.getInstance();
   if (!hasDataLoaded) {
-    print("LOADFING ${prefs.getString("host")}");
     if (prefs.getBool("has-data") ?? false) {
       steps.value = prefs.getInt("steps") ?? 20;
       host.text = prefs.getString("host") ?? "";
       cfg.value = prefs.getInt("cfg") ?? 20;
       sampler.value = prefs.getString("sampler") ?? "Euler";
       defaultPrompt.text =
-          prefs.getString("defaultPrompt") ?? "masterpiece, best quality";
-      defaultNegativePrompt.text = prefs.getString("defaultNegativePrompt") ??
-          "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name";
+          prefs.getString("defaultPrompt") ?? "";
+      defaultNegativePrompt.text = prefs.getString("defaultNegativePrompt") ?? "";
       hasDataLoaded = true;
     }
   }

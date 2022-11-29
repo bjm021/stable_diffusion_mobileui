@@ -156,6 +156,18 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text("DPM2 a"),
                       ),
                       DropdownMenuItem(
+                        value: "DPM2++ 2S a",
+                        child: Text("DPM2++ 2S a"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM++ 2M",
+                        child: Text("DPM++ 2M"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM2++ SDE",
+                        child: Text("DPM2++ SDE"),
+                      ),
+                      DropdownMenuItem(
                         value: "DPM fast",
                         child: Text("DPM fast"),
                       ),
@@ -174,6 +186,18 @@ class _SettingsPageState extends State<SettingsPage> {
                       DropdownMenuItem(
                         value: "DPM2 a Karras",
                         child: Text("DPM2 a Karras"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM++ 2S a Karras",
+                        child: Text("DPM++ 2S a Karras"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM++ 2M Karras",
+                        child: Text("DPM++ 2M Karras"),
+                      ),
+                      DropdownMenuItem(
+                        value: "DPM2++ SDE Karras",
+                        child: Text("DPM++ SDE Karras"),
                       ),
                       DropdownMenuItem(
                         value: "DDIM",

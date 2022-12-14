@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 bool hasDataLoaded = false;
 var host = TextEditingController();
@@ -253,6 +255,65 @@ class _SettingsPageState extends State<SettingsPage> {
                 controller: defaultNegativePrompt,
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(50, 10, 50, 10),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(
+                      40), // fromHeight use double.infinity as width and 40 is the height
+                ),
+                onPressed: () {
+                  // modal
+                  getSDModels().then(
+                    (value) => {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Select SD model"),
+                            backgroundColor: Colors.blueGrey.shade900,
+                            contentTextStyle: const TextStyle(color: Colors.white),
+                            titleTextStyle: const TextStyle(color: Colors.white),
+                            content: Container(
+                              width: double.maxFinite,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: value.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(value[index]["title"]),
+                                    textColor: Colors.white,
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // display loader
+                                      showDialog(
+                                        barrierDismissible: false,
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          setSDModel(value[index]["title"], context);
+                                          return AlertDialog(
+                                            backgroundColor: Colors.blueGrey.shade900,
+                                            titleTextStyle: const TextStyle(color: Colors.white),
+                                            title: const Text("Loading model"),
+                                            content:
+                                                const CircularProgressIndicator(),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    },
+                  );
+                },
+                child: const Text("Change SD model"),
+              ),
+            ),
             // save button
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -260,12 +321,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 // full width button
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(
-                      40), // fromHeight use double.infinity as width and 40 is the height
+                    40,
+                  ), // fromHeight use double.infinity as width and 40 is the height
                 ),
                 onPressed: () {
-                  saveConfig(context).then((value) =>
-                      Navigator.pushNamedAndRemoveUntil(
-                          context, "/", (route) => false));
+                  saveConfig(context).then(
+                    (value) => Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      "/",
+                      (route) => false,
+                    ),
+                  );
                 },
                 child: const Text("Save"),
               ),
@@ -299,10 +365,65 @@ Future<void> loadSavedData() async {
       host.text = prefs.getString("host") ?? "";
       cfg.value = prefs.getInt("cfg") ?? 20;
       sampler.value = prefs.getString("sampler") ?? "Euler";
-      defaultPrompt.text =
-          prefs.getString("defaultPrompt") ?? "";
-      defaultNegativePrompt.text = prefs.getString("defaultNegativePrompt") ?? "";
+      defaultPrompt.text = prefs.getString("defaultPrompt") ?? "";
+      defaultNegativePrompt.text =
+          prefs.getString("defaultNegativePrompt") ?? "";
       hasDataLoaded = true;
     }
   }
+}
+
+// modal widget
+Widget buildSelectModal(stringList, context) {
+  return Center();
+}
+
+Future<List<dynamic>> getSDModels() async {
+  final prefs = await SharedPreferences.getInstance();
+  var url = Uri(
+      scheme: "http",
+      host: prefs.getString("host")!.split(":")[0],
+      port: int.parse(prefs.getString("host")!.split(":")[1]),
+      path: "/sdapi/v1/sd-models");
+
+  http.Response response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    var data = jsonDecode(response.body);
+    print(data);
+    return data;
+  } else {
+    throw Exception('Failed to load models');
+  }
+}
+
+Future<void> setSDModel(model, context) async {
+  print("Setting model to $model");
+  print("--------------------------------------------------");
+
+  final prefs = await SharedPreferences.getInstance();
+
+  var url = Uri(
+      scheme: "http",
+      host: prefs.getString("host")!.split(":")[0],
+      port: int.parse(prefs.getString("host")!.split(":")[1]),
+      path: "/sdapi/v1/options");
+
+  var map = <String, String>{};
+  map["sd_model_checkpoint"] = model;
+  var body = json.encode(map);
+  http.Response response = await http.post(url, body: body, headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  });
+
+  if (response.statusCode == 200) {
+    print("Model set to $model");
+    Navigator.pop(context);
+  } else {
+    // print response
+    print(response.body);
+    throw Exception('Failed to set model! Status code: ${response.statusCode}');
+  }
+
 }

@@ -104,20 +104,21 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: () {
-                  if (imageDataBase64 == 'NONE') {
-                    return const Padding(
-                      padding: EdgeInsets.fromLTRB(10, 200, 10, 200),
-                      child: Text(
-                        'Waiting for image',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  } else {
-                    return Image.memory(base64Decode(imageDataBase64));
-                  }
-                }()),
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: () {
+                if (imageDataBase64 == 'NONE') {
+                  return const Padding(
+                    padding: EdgeInsets.fromLTRB(10, 200, 10, 200),
+                    child: Text(
+                      'Waiting for image',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                } else {
+                  return Image.memory(base64Decode(imageDataBase64));
+                }
+              }(),
+            ),
             ValueListenableBuilder(
               valueListenable: progressValue,
               builder: (context, value, child) {
@@ -185,8 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
 Future<String> _createFileFromString(String encodedStr) async {
   Uint8List bytes = base64.decode(encodedStr);
   String dir = (await getApplicationDocumentsDirectory()).path;
-  File file =
-      File("$dir/${DateTime.now().millisecondsSinceEpoch}.png");
+  File file = File("$dir/${DateTime.now().millisecondsSinceEpoch}.png");
   await file.writeAsBytes(bytes);
   return file.path;
 }

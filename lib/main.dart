@@ -34,11 +34,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         unselectedWidgetColor: Colors.white,
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.blueGrey.shade800,
+        scaffoldBackgroundColor: Colors.blueGrey.shade900,
         textTheme: const TextTheme(
           bodyText2: TextStyle(color: Colors.white),
           bodyText1: TextStyle(color: Colors.white),
         ),
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: Colors.blue,
+          backgroundColor: Colors.blueGrey.shade900,
+          accentColor: Colors.blue,
+          brightness: Brightness.dark,
+          primaryColorDark: Colors.blue,
+        ).copyWith(
+          secondary: Colors.blue,
+        )
       ),
       home: const MyHomePage(title: 'Stable Diffusion MobileUI'),
     );
@@ -144,8 +154,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       GallerySaver.saveImage(value).then(
                         (success) => {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Image saved'),
+                            SnackBar(
+                              content: const Text(
+                                'Image saved',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              backgroundColor: Colors.grey.shade900,
                             ),
                           ),
                           _deleteFile(value),

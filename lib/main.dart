@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => SettingsPage(),
       },
       theme: ThemeData(
+        unselectedWidgetColor: Colors.white,
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.blueGrey.shade800,
         textTheme: const TextTheme(
@@ -244,10 +245,11 @@ Future<String> createImage(BuildContext context, String prompt) async {
   map['batch_size'] = "1";
   map['steps'] = "${prefs.getInt("steps")}";
   map['cfg_scale'] = "${prefs.getInt("cfg")}";
-  map['width'] = "512";
-  map['height'] = "512";
+  map['width'] = "${prefs.getInt("width") ?? 512}";
+  map['height'] = "${prefs.getInt("height") ?? 512}";
   map['negative_prompt'] = prefs.getString("defaultNegativePrompt")!;
   map['sampler_index'] = prefs.getString("sampler")!;
+  map['restore_faces'] = prefs.getBool("restore-faces").toString();
 
   var body = json.encode(map);
 

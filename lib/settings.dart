@@ -7,9 +7,12 @@ bool hasDataLoaded = false;
 var host = TextEditingController();
 var steps = ValueNotifier<int>(20);
 var cfg = ValueNotifier<int>(20);
+var restoreFaces = ValueNotifier<bool>(false);
 var sampler = ValueNotifier("Euler");
 var defaultPrompt = TextEditingController(text: "");
 var defaultNegativePrompt = TextEditingController(text: "");
+var width = ValueNotifier<int>(512);
+var height = ValueNotifier<int>(512);
 
 class SettingsPage extends StatefulWidget {
   SettingsPage({Key? key}) : super(key: key);
@@ -124,10 +127,100 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
             ValueListenableBuilder(
-              valueListenable: sampler,
+              valueListenable: width,
+              builder: (context, value, child) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                      child: Text(
+                        "Image Width: ${width.value}",
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                      child: Slider(
+                        value: value.toDouble(),
+                        min: 256,
+                        max: 2048,
+                        divisions: 100,
+                        label: value.toString(),
+                        onChanged: (double newValue) {
+                          width.value = newValue.round();
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: height,
+              builder: (context, value, child) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                      child: Text(
+                        "Image Height: ${height.value}",
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                      child: Slider(
+                        value: value.toDouble(),
+                        min: 256,
+                        max: 2048,
+                        divisions: 190,
+                        label: value.toString(),
+                        onChanged: (double newValue) {
+                          height.value = newValue.round();
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    width.value = 512;
+                    height.value = 512;
+                  },
+                  child: const Text("Reset to 512x512"),
+                ),
+              )
+            ),
+            ValueListenableBuilder(
+              valueListenable: restoreFaces,
               builder: (context, value, child) {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: CheckboxListTile(
+                    title: const Text(
+                      "Restore Faces",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    value: value,
+                    onChanged: (bool? newValue) {
+                      restoreFaces.value = newValue!;
+                    },
+                  ),
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: sampler,
+              builder: (context, value, child) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
                   child: DropdownButton(
                     onChanged: (String? newValue) {
                       sampler.value = newValue!;
@@ -158,16 +251,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text("DPM2 a"),
                       ),
                       DropdownMenuItem(
-                        value: "DPM2++ 2S a",
-                        child: Text("DPM2++ 2S a"),
+                        value: "DPM++ 2S a",
+                        child: Text("DPM++ 2S a"),
                       ),
                       DropdownMenuItem(
                         value: "DPM++ 2M",
                         child: Text("DPM++ 2M"),
                       ),
                       DropdownMenuItem(
-                        value: "DPM2++ SDE",
-                        child: Text("DPM2++ SDE"),
+                        value: "DPM++ SDE",
+                        child: Text("DPM++ SDE"),
                       ),
                       DropdownMenuItem(
                         value: "DPM fast",
@@ -198,7 +291,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Text("DPM++ 2M Karras"),
                       ),
                       DropdownMenuItem(
-                        value: "DPM2++ SDE Karras",
+                        value: "DPM++ SDE Karras",
                         child: Text("DPM++ SDE Karras"),
                       ),
                       DropdownMenuItem(
@@ -218,6 +311,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 );
               },
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Divider(
+                color: Colors.white,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -272,8 +371,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           return AlertDialog(
                             title: const Text("Select SD model"),
                             backgroundColor: Colors.blueGrey.shade900,
-                            contentTextStyle: const TextStyle(color: Colors.white),
-                            titleTextStyle: const TextStyle(color: Colors.white),
+                            contentTextStyle:
+                                const TextStyle(color: Colors.white),
+                            titleTextStyle:
+                                const TextStyle(color: Colors.white),
                             content: Container(
                               width: double.maxFinite,
                               child: ListView.builder(
@@ -290,10 +391,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                         barrierDismissible: false,
                                         context: context,
                                         builder: (BuildContext context) {
-                                          setSDModel(value[index]["title"], context);
+                                          setSDModel(
+                                              value[index]["title"], context);
                                           return AlertDialog(
-                                            backgroundColor: Colors.blueGrey.shade900,
-                                            titleTextStyle: const TextStyle(color: Colors.white),
+                                            backgroundColor:
+                                                Colors.blueGrey.shade900,
+                                            titleTextStyle: const TextStyle(
+                                                color: Colors.white),
                                             title: const Text("Loading model"),
                                             content:
                                                 const CircularProgressIndicator(),
@@ -352,6 +456,9 @@ Future<void> saveConfig(BuildContext context) async {
   prefs.setString('sampler', sampler.value);
   prefs.setString('defaultPrompt', defaultPrompt.text);
   prefs.setString('defaultNegativePrompt', defaultNegativePrompt.text);
+  prefs.setBool('restore-faces', restoreFaces.value);
+  prefs.setInt("width", width.value);
+  prefs.setInt("height", height.value);
 
   print(
       "Saving: ${host.value}, ${steps.value}, ${cfg.value}, ${sampler.value}, ${defaultPrompt.value};;; ${defaultNegativePrompt.value}");
@@ -364,10 +471,13 @@ Future<void> loadSavedData() async {
       steps.value = prefs.getInt("steps") ?? 20;
       host.text = prefs.getString("host") ?? "";
       cfg.value = prefs.getInt("cfg") ?? 20;
+      restoreFaces.value = prefs.getBool("restore-faces") ?? false;
       sampler.value = prefs.getString("sampler") ?? "Euler";
       defaultPrompt.text = prefs.getString("defaultPrompt") ?? "";
       defaultNegativePrompt.text =
           prefs.getString("defaultNegativePrompt") ?? "";
+      width.value = prefs.getInt("width") ?? 512;
+      height.value = prefs.getInt("height") ?? 512;
       hasDataLoaded = true;
     }
   }
@@ -425,5 +535,4 @@ Future<void> setSDModel(model, context) async {
     print(response.body);
     throw Exception('Failed to set model! Status code: ${response.statusCode}');
   }
-
 }

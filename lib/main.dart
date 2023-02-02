@@ -253,7 +253,10 @@ Future<String> createImage(BuildContext context, String prompt) async {
     return "ERROR";
   }
 
-  map['prompt'] = '${prefs.getString("defaultPrompt")}, $prompt';
+  if (prefs.getString("defaultPrompt") != null && prefs.getString("defaultPrompt")!.isNotEmpty) {
+    prompt = '${prefs.getString("defaultPrompt")}, $prompt';
+  }
+  map['prompt'] = prompt;
   map['seed'] = "-1";
   map['subseed'] = "-1";
   map['batch_size'] = "1";
